@@ -1,0 +1,18 @@
+/* styles.css */
+.character-card {
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.character-card input {
+    margin-right: 8px;
+}
+
+.character-selection {
+    display: flex;
+    flex-wrap: wrap;
+}
