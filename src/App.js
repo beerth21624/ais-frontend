@@ -66,7 +66,7 @@ function App() {
       const mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
       setStream(mediaStream);
 
-      socket.current = io('http://localhost:8080');
+      socket.current = io('https://ais-be.tu4rl4.easypanel.host');
 
       peerRef.current = new SimplePeer({
         initiator: true,
