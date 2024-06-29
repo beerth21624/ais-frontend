@@ -38,6 +38,8 @@ function App() {
   const recognitionRef = useRef(null);
   const [recognizing, setRecognizing] = useState(false);
   const [interimTranscript, setInterimTranscript] = useState('');
+  const [speechRecognitionSupported, setSpeechRecognitionSupported] = useState(true);
+
 
   const speak = (text) => {
     if (ttsEnabled) {
@@ -47,6 +49,11 @@ function App() {
       window.speechSynthesis.speak(utterance);
     }
   };
+
+  useEffect(() => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    setSpeechRecognitionSupported(!!SpeechRecognition);
+  }, []);
 
   useEffect(() => {
     socket.current = io('https://ais-be.tu4rl4.easypanel.host');
@@ -257,9 +264,16 @@ function App() {
             placeholder="พิมพ์ข้อความ..."
             disabled={!selectedCharacter}
           />
-          <VoiceButton onClick={toggleRecognition} recognizing={recognizing} disabled={!selectedCharacter}>
-            {recognizing ? <Mic /> : <MicOff />}
-          </VoiceButton>
+          {speechRecognitionSupported && (
+            <VoiceButton
+              onClick={toggleRecognition}
+              recognizing={recognizing}
+              disabled={!selectedCharacter}
+              title={recognizing ? "หยุดการรับรู้เสียง" : "เริ่มการรับรู้เสียง"}
+            >
+              {recognizing ? <Mic /> : <MicOff />}
+            </VoiceButton>
+          )}
           <SendButton onClick={sendMessage} disabled={!selectedCharacter}>ส่ง</SendButton>
          
           {/* <VoiceButton onClick={() => toggleTts()} recognizing={ttsEnabled}>

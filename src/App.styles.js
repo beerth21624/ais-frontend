@@ -204,30 +204,38 @@ export const WarningMessage = styled.div`
 
 
 export const VoiceButton = styled.button`
-  background-color: ${props => props.recognizing ? '#0074D9' : '#ff4136'};
+  background-color: ${props =>
+    props.disabled ? '#cccccc' :
+      props.recognizing ? '#0074D9' : '#ff4136'
+  };
   color: white;
   border: none;
   border-radius: 50%;
   width: 40px;
   height: 40px;
-  font-size: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
   transition: background-color 0.3s ease;
   margin-right: 4px;
+  opacity: ${props => props.disabled ? 0.5 : 1};
+
   &:hover {
-    background-color: ${props => props.recognizing ? '#0056b3' : '#ff7b72'};
+    background-color: ${props =>
+    props.disabled ? '#cccccc' :
+      props.recognizing ? '#0056b3' : '#ff7b72'
+  };
   }
+
   &:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(0, 116, 217, 0.5);
   }
 
-  &:disabled {
-    background-color: #cccccc;
-    cursor: not-allowed;
+  svg {
+    width: 20px;
+    height: 20px;
   }
 `;
 
