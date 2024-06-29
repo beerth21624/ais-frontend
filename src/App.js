@@ -1,23 +1,26 @@
-import React, { useState, useEffect, useRef } from 'react';
-import io from 'socket.io-client';
+import axios from 'axios';
+import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import axios from 'axios';
-import SimplePeer from 'simple-peer';
+import io from 'socket.io-client';
+import { FaMicrophone } from 'react-icons/fa';
+import { IoStop } from "react-icons/io5";
+import { FaVolumeUp, FaVolumeMute } from 'react-icons/fa';
 
 import {
   AppContainer,
+  CharacterCard,
+  CharacterSelection,
+  ChatHistory,
+  ChatInput,
+  ChatInputContainer,
   ChatWindow,
   Header,
-  ChatHistory,
   Message,
-  ChatInputContainer,
-  ChatInput,
   SendButton,
   TypingIndicator,
-  CharacterSelection,
-  CharacterCard,
-  WarningMessage
+  WarningMessage,
+  VoiceButton
 } from './App.styles';
 
 function App() {
@@ -26,25 +29,46 @@ function App() {
   const [isTyping, setIsTyping] = useState(false);
   const [characters, setCharacters] = useState([]);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
   const socket = useRef(null);
-  const [stream, setStream] = useState(null);
-  const peerRef = useRef(null);
-  
+  const typingTimeoutRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const [recognizing, setRecognizing] = useState(false);
+  const [interimTranscript, setInterimTranscript] = useState('');
+
+  const speak = (text) => {
+    if (ttsEnabled) {
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'th-TH'; // Set language to Thai
+      window.speechSynthesis.cancel(); // Cancel any ongoing speech
+      window.speechSynthesis.speak(utterance);
+    }
+  };
 
   useEffect(() => {
     socket.current = io('https://ais-be.tu4rl4.easypanel.host');
 
     socket.current.on('response', (data) => {
-      setChat((prevChat) => [...prevChat, { sender: 'bot', text: data }]);
+      setChat((prevChat) => {
+        const updatedChat = prevChat.filter((msg) => msg.text !== 'กำลังพิมพ...');
+        const newChat = [...updatedChat, { sender: 'bot', text: data }];
+        speak(data);
+        return newChat;
+      });
       setIsTyping(false);
     });
 
-    socket.current.on('typing', (typing) => {
-      setIsTyping(typing);
+    socket.current.on('typing', ({ userId, isTyping }) => {
+      if (userId !== socket.current.id) {
+        setIsTyping(isTyping);
+      }
     });
 
     socket.current.on('error', (error) => {
-      setChat((prevChat) => [...prevChat, { sender: 'bot', text: error }]);
+      setChat((prevChat) => {
+        const updatedChat = prevChat.filter((msg) => msg.text !== 'กำลังพิมพ...');
+        return [...updatedChat, { sender: 'bot', text: error }];
+      });
       setIsTyping(false);
     });
 
@@ -59,32 +83,6 @@ function App() {
   useEffect(() => {
     getCharacters();
   }, []);
-
-
-  const startScreenShare = async () => {
-    try {
-      const mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-      setStream(mediaStream);
-
-      socket.current = io('https://ais-be.tu4rl4.easypanel.host');
-
-      peerRef.current = new SimplePeer({
-        initiator: true,
-        stream: mediaStream,
-        trickle: false,
-      });
-
-      peerRef.current.on('signal', (signal) => {
-        socket.current.emit('signal', { target: 'admin', signal });
-      });
-
-      socket.current.on('signal', (data) => {
-        peerRef.current.signal(data.signal);
-      });
-    } catch (err) {
-      console.error('Error accessing display media:', err);
-    }
-  };
 
   const getCharacters = async () => {
     try {
@@ -102,15 +100,27 @@ function App() {
   const sendMessage = () => {
     if (selectedCharacter && message.trim()) {
       setChat((prevChat) => [...prevChat, { sender: 'user', text: message }]);
-      socket.current.emit('message', message);
       setMessage('');
+
+      setChat((prevChat) => [...prevChat, { sender: 'bot', text: 'กำลังพิมพ...' }]);
+
+      socket.current.emit('message', message);
+
+      clearTimeout(typingTimeoutRef.current);
+      socket.current.emit('typing', { userId: socket.current.id, isTyping: false });
     }
   };
 
   const handleTyping = (e) => {
     setMessage(e.target.value);
     if (selectedCharacter) {
-      socket.current.emit('typing', e.target.value.trim() !== '');
+      clearTimeout(typingTimeoutRef.current);
+
+      socket.current.emit('typing', { userId: socket.current.id, isTyping: true });
+
+      typingTimeoutRef.current = setTimeout(() => {
+        socket.current.emit('typing', { userId: socket.current.id, isTyping: false });
+      }, 2000);
     }
   };
 
@@ -120,10 +130,62 @@ function App() {
     setChat([]);
   };
 
+  const startRecognition = () => {
+    if (!recognitionRef.current) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.lang = 'th-TH';
+      recognitionRef.current.interimResults = true;
+      recognitionRef.current.onresult = (event) => {
+        let currentInterimTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            setMessage((prev) => prev + event.results[i][0].transcript + ' ');
+          } else {
+            currentInterimTranscript += event.results[i][0].transcript;
+          }
+        }
+        setInterimTranscript(currentInterimTranscript);
+      };
+      recognitionRef.current.onend = () => {
+        setRecognizing(false);
+        setInterimTranscript('');
+      };
+    }
+    recognitionRef.current.start();
+    setRecognizing(true);
+  };
+
+  const stopRecognition = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      setRecognizing(false);
+    }
+  };
+
+  const toggleRecognition = () => {
+    if (recognizing) {
+      stopRecognition();
+    } else {
+      startRecognition();
+    }
+  };
+
+  const toggleTts = () => {
+    if (ttsEnabled) {
+      window.speechSynthesis.cancel();
+
+    }
+    setTtsEnabled((prev) => !prev);
+
+  };
+
+
+
   return (
     <AppContainer>
       <CharacterSelection>
-        <Header>หลานเอง v0.1.0</Header>
+        <Header>ทดสอบ AI หลานเอง</Header>
         <h2>เลือกตัวละคร</h2>
         {characters.map((char, index) => (
           <CharacterCard
@@ -137,15 +199,12 @@ function App() {
               id={char._id}
               value={char._id}
               checked={selectedCharacter === char._id}
-              onChange={(e) => handleCharacterSelect(char._id)}
+              onChange={() => handleCharacterSelect(char._id)}
             />
             <img src={char.image_url} alt={char.name} />
             <label htmlFor={char._id}>{char.name}</label>
           </CharacterCard>
         ))}
-       <div className='mt-auto'>
-           <button onClick={startScreenShare}>Share Screen</button>
-        </div>
       </CharacterSelection>
 
       <ChatWindow>
@@ -189,17 +248,22 @@ function App() {
         <ChatInputContainer>
           <ChatInput
             type="text"
-            value={message}
+            value={message + interimTranscript}
             onChange={handleTyping}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             placeholder="พิมพ์ข้อความ..."
             disabled={!selectedCharacter}
           />
+          <VoiceButton onClick={toggleRecognition} recognizing={recognizing}>
+            {recognizing ? <IoStop /> : <FaMicrophone />}
+          </VoiceButton>
           <SendButton onClick={sendMessage} disabled={!selectedCharacter}>ส่ง</SendButton>
+         
+          {/* <VoiceButton onClick={() => toggleTts()} recognizing={ttsEnabled}>
+            {ttsEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
+          </VoiceButton> */}
         </ChatInputContainer>
       </ChatWindow>
-
-      {stream && <video autoPlay playsInline ref={video => video && (video.srcObject = stream)} />}
     </AppContainer>
   );
 }

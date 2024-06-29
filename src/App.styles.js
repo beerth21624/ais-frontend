@@ -24,6 +24,7 @@ export const ChatWindow = styled.div`
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   margin-top: 20px;
+  min-height: 84vh;
 
   @media (min-width: 768px) {
     width: 70%;
@@ -74,6 +75,7 @@ export const Message = styled.div`
 
 export const ChatInputContainer = styled.div`
   display: flex;
+  align-items: center;
   padding: 20px;
   background: #fff;
   border-top: 1px solid #eee;
@@ -197,4 +199,33 @@ export const WarningMessage = styled.div`
 `;
 
 
+export const VoiceButton = styled.button`
+  background-color: ${props => props.recognizing ? '#ff4136' : '#0074D9'};
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-right: 4px;
+
+  &:hover {
+    background-color: ${props => props.recognizing ? '#ff7b72' : '#0056b3'};
+  }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 116, 217, 0.5);
+  }
+
+  &:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+  }
+`;
 
