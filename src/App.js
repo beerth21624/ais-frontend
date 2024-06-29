@@ -6,6 +6,9 @@ import io from 'socket.io-client';
 import { FaMicrophone } from 'react-icons/fa';
 import { IoStop } from "react-icons/io5";
 import { FaVolumeUp, FaVolumeMute } from 'react-icons/fa';
+import { Mic } from 'lucide-react';
+import { MicOff } from 'lucide-react';
+
 
 import {
   AppContainer,
@@ -254,8 +257,8 @@ function App() {
             placeholder="พิมพ์ข้อความ..."
             disabled={!selectedCharacter}
           />
-          <VoiceButton onClick={toggleRecognition} recognizing={recognizing}>
-            {recognizing ? <IoStop /> : <FaMicrophone />}
+          <VoiceButton onClick={toggleRecognition} recognizing={recognizing} disabled={!selectedCharacter}>
+            {recognizing ? <Mic /> : <MicOff />}
           </VoiceButton>
           <SendButton onClick={sendMessage} disabled={!selectedCharacter}>ส่ง</SendButton>
          

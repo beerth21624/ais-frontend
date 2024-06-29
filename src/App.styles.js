@@ -76,9 +76,13 @@ export const Message = styled.div`
 export const ChatInputContainer = styled.div`
   display: flex;
   align-items: center;
-  padding: 20px;
+  padding: 8px;
   background: #fff;
   border-top: 1px solid #eee;
+
+  @media (min-width: 768px) {
+    padding: 20px 30px;
+  }
 `;
 
 export const ChatInput = styled.input`
@@ -86,7 +90,7 @@ export const ChatInput = styled.input`
   padding: 12px 15px;
   border: 2px solid #6ABE3A;
   border-radius: 25px;
-  margin-right: 10px;
+  margin-right: 4px;
   font-size: 16px;
   outline: none;
   transition: all 0.3s ease;
@@ -200,7 +204,7 @@ export const WarningMessage = styled.div`
 
 
 export const VoiceButton = styled.button`
-  background-color: ${props => props.recognizing ? '#ff4136' : '#0074D9'};
+  background-color: ${props => props.recognizing ? '#0074D9' : '#ff4136'};
   color: white;
   border: none;
   border-radius: 50%;
@@ -213,11 +217,9 @@ export const VoiceButton = styled.button`
   cursor: pointer;
   transition: background-color 0.3s ease;
   margin-right: 4px;
-
   &:hover {
-    background-color: ${props => props.recognizing ? '#ff7b72' : '#0056b3'};
+    background-color: ${props => props.recognizing ? '#0056b3' : '#ff7b72'};
   }
-
   &:focus {
     outline: none;
     box-shadow: 0 0 0 2px rgba(0, 116, 217, 0.5);
