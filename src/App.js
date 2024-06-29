@@ -3,6 +3,8 @@ import io from 'socket.io-client';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import axios from 'axios';
+import SimplePeer from 'simple-peer';
+
 import {
   AppContainer,
   ChatWindow,
@@ -25,6 +27,9 @@ function App() {
   const [characters, setCharacters] = useState([]);
   const [selectedCharacter, setSelectedCharacter] = useState(null);
   const socket = useRef(null);
+  const [stream, setStream] = useState(null);
+  const peerRef = useRef(null);
+  
 
   useEffect(() => {
     socket.current = io('https://ais-be.tu4rl4.easypanel.host');
@@ -54,6 +59,32 @@ function App() {
   useEffect(() => {
     getCharacters();
   }, []);
+
+
+  const startScreenShare = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      setStream(mediaStream);
+
+      socket.current = io('http://localhost:8080');
+
+      peerRef.current = new SimplePeer({
+        initiator: true,
+        stream: mediaStream,
+        trickle: false,
+      });
+
+      peerRef.current.on('signal', (signal) => {
+        socket.current.emit('signal', { target: 'admin', signal });
+      });
+
+      socket.current.on('signal', (data) => {
+        peerRef.current.signal(data.signal);
+      });
+    } catch (err) {
+      console.error('Error accessing display media:', err);
+    }
+  };
 
   const getCharacters = async () => {
     try {
@@ -112,6 +143,9 @@ function App() {
             <label htmlFor={char._id}>{char.name}</label>
           </CharacterCard>
         ))}
+       <div className='mt-auto'>
+           <button onClick={startScreenShare}>Share Screen</button>
+        </div>
       </CharacterSelection>
 
       <ChatWindow>
@@ -164,6 +198,8 @@ function App() {
           <SendButton onClick={sendMessage} disabled={!selectedCharacter}>ส่ง</SendButton>
         </ChatInputContainer>
       </ChatWindow>
+
+      {stream && <video autoPlay playsInline ref={video => video && (video.srcObject = stream)} />}
     </AppContainer>
   );
 }

@@ -4,7 +4,7 @@ import styled from 'styled-components';
 export const AppContainer = styled.div`
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  min-height: 96vh;
   background: linear-gradient(135deg, #6ABE3A, #359312);
   padding: 20px;
 
@@ -17,7 +17,6 @@ export const AppContainer = styled.div`
 
 export const ChatWindow = styled.div`
   width: 100%;
-  height: 80vh;
   display: flex;
   flex-direction: column;
   background: rgba(255, 255, 255, 0.9);
@@ -134,17 +133,19 @@ export const TypingIndicator = styled.div`
 `;
 
 export const CharacterSelection = styled.div`
-  max-height: 300px;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 20px;
   padding: 20px;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+
+  
 
   @media (min-width: 768px) {
     width: 25%;
     max-width: 300px;
-    height: 80vh;
     max-height: none;
     margin-right: 20px;
   }
