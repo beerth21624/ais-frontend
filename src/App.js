@@ -81,6 +81,8 @@ function App() {
         speak(data);
         return newChat;
       });
+
+
       setIsTyping(false);
     });
 
@@ -232,20 +234,34 @@ function App() {
       )}
 
       <ChatWindow isMobile={isMobile}>
-        <div style={{ padding: '10px', color: '#fff', fontWeight: 'bold' }}>
+        <div style={{ padding: '10px', color: '#fff', fontWeight: 'bold', }}>
           {isMobile ? (
+            <div style={{
+              color: '#6ABE3A',
+              fontWeight: 'bold',
+              display: 'flex',
+              justifyContent: 'between',
+              alignItems: 'center',
+              gap: '24px',
+              
+            
+            }}>
+              <p style={{
+                textWrap: 'nowrap',
+                margin: '0px',
+                
+              }}>ทดสอบหลานเอง v 0.1.3</p>
             <select
               value={selectedCharacter || ''}
               onChange={(e) => handleCharacterSelect(e.target.value)}
               style={{
                 width: '100%',
                 padding: '10px',
-                marginBottom: '10px',
-                borderRadius: '5px',
+                borderRadius: '24px',
                 border: 'none',
                 backgroundColor: '#6ABE3A',
                 color: '#fff',
-                fontWeight: 'bold'
+                fontWeight: 'bold',
               }}
             >
               <option value="">เลือกตัวละคร</option>
@@ -255,6 +271,7 @@ function App() {
                 </option>
               ))}
             </select>
+            </div>
           ) : selectedCharacter ? (
             <div style={{ padding: '10px', color: '#6ABE3A', fontWeight: 'bold' }}>
               คุณเลือกตัวละคร: {characters.find((char) => char._id === selectedCharacter)?.name}
