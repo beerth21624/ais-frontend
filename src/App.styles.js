@@ -6,7 +6,7 @@ export const AppContainer = styled.div`
   flex-direction: column;
   min-height: 96vh;
   background: linear-gradient(135deg, #6ABE3A, #359312);
-  padding: 20px;
+  padding:${props => props.isMobile ? '0px 10px 20px 10px' : '20px'};
 
   @media (min-width: 768px) {
     flex-direction: row;
@@ -24,7 +24,8 @@ export const ChatWindow = styled.div`
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   margin-top: 20px;
-  min-height: 84vh;
+  min-height:${props => props.isMobile ? '96vh' : '84vh'};
+  
 
   @media (min-width: 768px) {
     width: 70%;

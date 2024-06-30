@@ -40,6 +40,9 @@ function App() {
   const [interimTranscript, setInterimTranscript] = useState('');
   const [speechRecognitionSupported, setSpeechRecognitionSupported] = useState(true);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+
+
 
   const speak = (text) => {
     if (ttsEnabled) {
@@ -54,11 +57,24 @@ function App() {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     setSpeechRecognitionSupported(!!SpeechRecognition);
   }, []);
+  useEffect(() => {
+    getCharacters();
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   useEffect(() => {
     socket.current = io('https://ais-be.tu4rl4.easypanel.host');
 
     socket.current.on('response', (data) => {
+
       setChat((prevChat) => {
         const updatedChat = prevChat.filter((msg) => msg.text !== 'กำลังพิมพ...');
         const newChat = [...updatedChat, { sender: 'bot', text: data }];
@@ -90,9 +106,6 @@ function App() {
     };
   }, []);
 
-  useEffect(() => {
-    getCharacters();
-  }, []);
 
   const getCharacters = async () => {
     try {
@@ -190,36 +203,59 @@ function App() {
 
   };
 
-
-
+   
   return (
-    <AppContainer>
-      <CharacterSelection>
-        <Header>ทดสอบ AI หลานเอง</Header>
-        <h2>เลือกตัวละคร</h2>
-        {characters.map((char, index) => (
-          <CharacterCard
-            key={index}
-            onClick={() => handleCharacterSelect(char._id)}
-            selected={selectedCharacter === char._id}
-          >
-            <input
-              type="radio"
-              name="character"
-              id={char._id}
-              value={char._id}
-              checked={selectedCharacter === char._id}
-              onChange={() => handleCharacterSelect(char._id)}
-            />
-            <img src={char.image_url} alt={char.name} />
-            <label htmlFor={char._id}>{char.name}</label>
-          </CharacterCard>
-        ))}
-      </CharacterSelection>
+    <AppContainer isMobile={isMobile}>
+      {!isMobile && (
+        <CharacterSelection>
+          <Header>ทดสอบ AI หลานเอง</Header>
+          <h2>เลือกตัวละคร</h2>
+          {characters.map((char, index) => (
+            <CharacterCard
+              key={index}
+              onClick={() => handleCharacterSelect(char._id)}
+              selected={selectedCharacter === char._id}
+            >
+              <input
+                type="radio"
+                name="character"
+                id={char._id}
+                value={char._id}
+                checked={selectedCharacter === char._id}
+                onChange={() => handleCharacterSelect(char._id)}
+              />
+              <img src={char.image_url} alt={char.name} />
+              <label htmlFor={char._id}>{char.name}</label>
+            </CharacterCard>
+          ))}
+        </CharacterSelection>
+      )}
 
-      <ChatWindow>
+      <ChatWindow isMobile={isMobile}>
         <div style={{ padding: '10px', color: '#fff', fontWeight: 'bold' }}>
-          {selectedCharacter ? (
+          {isMobile ? (
+            <select
+              value={selectedCharacter || ''}
+              onChange={(e) => handleCharacterSelect(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px',
+                marginBottom: '10px',
+                borderRadius: '5px',
+                border: 'none',
+                backgroundColor: '#6ABE3A',
+                color: '#fff',
+                fontWeight: 'bold'
+              }}
+            >
+              <option value="">เลือกตัวละคร</option>
+              {characters.map((char) => (
+                <option key={char._id} value={char._id}>
+                  {char.name}
+                </option>
+              ))}
+            </select>
+          ) : selectedCharacter ? (
             <div style={{ padding: '10px', color: '#6ABE3A', fontWeight: 'bold' }}>
               คุณเลือกตัวละคร: {characters.find((char) => char._id === selectedCharacter)?.name}
             </div>
