@@ -10,6 +10,7 @@ import { Mic } from 'lucide-react';
 import { MicOff } from 'lucide-react';
 
 
+
 import {
   AppContainer,
   CharacterCard,
@@ -31,7 +32,7 @@ function App() {
   const [chat, setChat] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [characters, setCharacters] = useState([]);
-  const [selectedCharacter, setSelectedCharacter] = useState(null);
+  const [selectedCharacter, setSelectedCharacter] = useState("");
   const [ttsEnabled, setTtsEnabled] = useState(true);
   const socket = useRef(null);
   const typingTimeoutRef = useRef(null);
@@ -123,7 +124,7 @@ function App() {
   };
 
   const sendMessage = () => {
-    if (selectedCharacter && message.trim()) {
+    if ( message.trim()) {
       setChat((prevChat) => [...prevChat, { sender: 'user', text: message }]);
       setMessage('');
 
@@ -138,7 +139,6 @@ function App() {
 
   const handleTyping = (e) => {
     setMessage(e.target.value);
-    if (selectedCharacter) {
       clearTimeout(typingTimeoutRef.current);
 
       socket.current.emit('typing', { userId: socket.current.id, isTyping: true });
@@ -146,7 +146,6 @@ function App() {
       typingTimeoutRef.current = setTimeout(() => {
         socket.current.emit('typing', { userId: socket.current.id, isTyping: false });
       }, 2000);
-    }
   };
 
   const handleCharacterSelect = (characterId) => {
@@ -212,7 +211,25 @@ function App() {
         <CharacterSelection>
           <Header>ทดสอบ AI หลานเอง</Header>
           <h2>เลือกตัวละคร</h2>
+          <CharacterCard
+            onClick={() => handleCharacterSelect("")}
+            selected={selectedCharacter === ""}
+          >
+            <input
+              type="radio"
+              name="character"
+              id={"none"}
+              value={""}
+              checked={selectedCharacter === ""}
+              onChange={() => handleCharacterSelect("")}
+            />
+            <img src="/customer-service.png" alt="หลานเอง agent 1.0" />
+            <label htmlFor={"none"}>
+              หลานเอง agent 1.0 
+            </label>
+          </CharacterCard>
           {characters.map((char, index) => (
+
             <CharacterCard
               key={index}
               onClick={() => handleCharacterSelect(char._id)}
@@ -250,7 +267,7 @@ function App() {
                 textWrap: 'nowrap',
                 margin: '0px',
                 
-              }}>ทดสอบหลานเอง v 0.1.3</p>
+              }}>ทดสอบหลานเอง</p>
             <select
               value={selectedCharacter || ''}
               onChange={(e) => handleCharacterSelect(e.target.value)}
@@ -264,7 +281,7 @@ function App() {
                 fontWeight: 'bold',
               }}
             >
-              <option value="">เลือกตัวละคร</option>
+              <option value="">หลานเอง agent 1.0</option>
               {characters.map((char) => (
                 <option key={char._id} value={char._id}>
                   {char.name}
@@ -277,7 +294,9 @@ function App() {
               คุณเลือกตัวละคร: {characters.find((char) => char._id === selectedCharacter)?.name}
             </div>
           ) : (
-            <WarningMessage>กรุณาเลือกตัวละครก่อนเริ่มแชท</WarningMessage>
+                <div style={{ padding: '10px', color: '#6ABE3A', fontWeight: 'bold' }}>
+                  หลานเอง agent 1.0 : ai ที่ฉลาดที่สุดของเรา
+</div>
           )}
         </div>
 
@@ -315,19 +334,18 @@ function App() {
             onChange={handleTyping}
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             placeholder="พิมพ์ข้อความ..."
-            disabled={!selectedCharacter}
+            // disabled={!selectedCharacter}
           />
           {speechRecognitionSupported && (
             <VoiceButton
               onClick={toggleRecognition}
               recognizing={recognizing}
-              disabled={!selectedCharacter}
               title={recognizing ? "หยุดการรับรู้เสียง" : "เริ่มการรับรู้เสียง"}
             >
               {recognizing ? <Mic /> : <MicOff />}
             </VoiceButton>
           )}
-          <SendButton onClick={sendMessage} disabled={!selectedCharacter}>ส่ง</SendButton>
+          <SendButton onClick={sendMessage} >ส่ง</SendButton>
          
           {/* <VoiceButton onClick={() => toggleTts()} recognizing={ttsEnabled}>
             {ttsEnabled ? <FaVolumeUp /> : <FaVolumeMute />}
