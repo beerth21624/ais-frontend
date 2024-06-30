@@ -24,7 +24,7 @@ export const ChatWindow = styled.div`
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   margin-top: 20px;
-  min-height:${props => props.isMobile ? '96vh' : '84vh'};
+  min-height:${props => props.isMobile ? '84vh' : '84vh'};
   
 
   @media (min-width: 768px) {
